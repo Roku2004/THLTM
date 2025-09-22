@@ -241,6 +241,7 @@ void menu()
             break;
         case 2:
             printf("Exiting the program.\n");
+            mssv_current = 0;
             start_menu();
             break;
         default:
@@ -258,32 +259,37 @@ void login_system()
     int mssv_input;
     char password_input[256];
     int count = 0;
-    while (count < 3)
+    int login_success = 0;
+    
+    while (count < 3 && !login_success)
     {
+        printf("Enter MSSV: ");
+        scanf("%d", &mssv_input);
+        printf("Enter Password: ");
+        scanf("%s", password_input);
+        
+        // Kiểm tra với tất cả users
         for (int i = 0; i < user_count; i++)
         {
-            printf("Enter MSSV: ");
-            scanf("%d", &mssv_input);
-            printf("Enter Password: ");
-            scanf("%s", password_input);
             if (users[i].mssv == mssv_input && strcmp(users[i].password, password_input) == 0)
             {
                 mssv_current = mssv_input;
                 printf("Login successful!\n");
-                menu();
-            }
-            else
-            {
-                printf("Login failed!\n");
-                count++;
-                if (count == 3)
-                {
-                    printf("Too many failed attempts. Exiting.\n");
-                    menu();
-                }
+                login_success = 1;
+                menu();  // Gọi menu sau khi login thành công
+                return;  // Thoát khỏi hàm
             }
         }
-        break;
+        
+        if (!login_success)
+        {
+            count++;
+            printf("Login failed!\n");
+            if (count == 3)
+            {
+                printf("Too many failed attempts. Returning to start menu.\n");
+            }
+        }
     }
     printf("-----------------------------------------------------------------------------\n");
 }
@@ -356,6 +362,8 @@ void read_all_schedule()
     char schedule[13][6][50];
     printf("All Schedule:\n");
     Schedule schedules[1000];
+    Student_Register registers[1000];
+    int register_count = read_register("student_registration.txt", registers, 1000);
     int schedule_count = read_schedule(schedules, 1000, "course_schedule.txt");
     for (int i = 0; i < 13; i++)
         for (int j = 0; j < 6; j++)
@@ -363,44 +371,50 @@ void read_all_schedule()
 
     for (int k = 0; k < schedule_count; k++)
     {
-        int day_index = -1;
-        if (strcmp(schedules[k].day, "Monday") == 0)
-            day_index = 0;
-        else if (strcmp(schedules[k].day, "Tuesday") == 0)
-            day_index = 1;
-        else if (strcmp(schedules[k].day, "Wednesday") == 0)
-            day_index = 2;
-        else if (strcmp(schedules[k].day, "Thursday") == 0)
-            day_index = 3;
-        else if (strcmp(schedules[k].day, "Friday") == 0)
-            day_index = 4;
-        else if (strcmp(schedules[k].day, "Saturday") == 0)
-            day_index = 5;
-
-        if (day_index == -1)
-            continue;
-
-        int start_period = atoi(schedules[k].period);
-        int end_period = start_period;
-
-        char *dash = strchr(schedules[k].period, '-');
-        if (dash != NULL)
+        for (int l = 0; l < register_count; l++)
         {
-            end_period = atoi(dash + 1);
-        }
-
-        for (int period = start_period; period <= end_period; period++)
-        {
-            int display_period = period;
-
-            if (strcmp(schedules[k].am_pm, "Afternoon") == 0)
+            if (schedules[k].id == registers[l].class_id && registers[l].mssv == mssv_current)
             {
-                display_period = period + 6;
-            }
+                int day_index = -1;
+                if (strcmp(schedules[k].day, "Monday") == 0)
+                    day_index = 0;
+                else if (strcmp(schedules[k].day, "Tuesday") == 0)
+                    day_index = 1;
+                else if (strcmp(schedules[k].day, "Wednesday") == 0)
+                    day_index = 2;
+                else if (strcmp(schedules[k].day, "Thursday") == 0)
+                    day_index = 3;
+                else if (strcmp(schedules[k].day, "Friday") == 0)
+                    day_index = 4;
+                else if (strcmp(schedules[k].day, "Saturday") == 0)
+                    day_index = 5;
 
-            if (display_period >= 1 && display_period <= 12)
-            {
-                snprintf(schedule[display_period][day_index], 50, "%s", schedules[k].room);
+                if (day_index == -1)
+                    continue;
+
+                int start_period = atoi(schedules[k].period);
+                int end_period = start_period;
+
+                char *dash = strchr(schedules[k].period, '-');
+                if (dash != NULL)
+                {
+                    end_period = atoi(dash + 1);
+                }
+
+                for (int period = start_period; period <= end_period; period++)
+                {
+                    int display_period = period;
+
+                    if (strcmp(schedules[k].am_pm, "Afternoon") == 0)
+                    {
+                        display_period = period + 6;
+                    }
+
+                    if (display_period >= 1 && display_period <= 12)
+                    {
+                        snprintf(schedule[display_period][day_index], 50, "%s", schedules[k].room);
+                    }
+                }
             }
         }
     }
@@ -454,6 +468,7 @@ void schedule_menu()
             break;
         case 5:
             printf("Exiting the program.\n");
+            mssv_current = 0;
             start_menu();
             break;
         default:
