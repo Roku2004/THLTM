@@ -512,4 +512,5 @@ int main()
     printf("Welcome to the Course Management System\n");
     start_menu();
     return 0;
+    
 }
