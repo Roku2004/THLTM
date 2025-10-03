@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 
 #define MAXLINE 4096
-#define SERV_PORT 6868
+#define SERV_PORT 3000
 
 void start_menu();
 void login_system();
